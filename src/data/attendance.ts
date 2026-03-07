@@ -1,0 +1,263 @@
+export interface AttendanceRecord {
+  id: number;
+  studentId: number;
+  studentName: string;
+  courseId: number;
+  courseName: string;
+  present: number;
+  total: number;
+  lastSession: string;
+  status: "good" | "warning" | "critical";
+}
+
+function deriveStatus(
+  present: number,
+  total: number,
+): "good" | "warning" | "critical" {
+  const pct = total === 0 ? 100 : Math.round((present / total) * 100);
+  if (pct >= 80) return "good";
+  if (pct >= 60) return "warning";
+  return "critical";
+}
+
+export const initialAttendance: AttendanceRecord[] = [
+  // Tife Abayomi (student 1) — enrolled in courses 1,2,3,4
+  {
+    id: 1,
+    studentId: 1,
+    studentName: "Tife Abayomi",
+    courseId: 1,
+    courseName: "AWS Cloud Fundamentals",
+    present: 14,
+    total: 16,
+    lastSession: "Mar 5, 2026",
+    status: deriveStatus(14, 16),
+  },
+  {
+    id: 2,
+    studentId: 1,
+    studentName: "Tife Abayomi",
+    courseId: 2,
+    courseName: "React + TypeScript Mastery",
+    present: 10,
+    total: 12,
+    lastSession: "Mar 4, 2026",
+    status: deriveStatus(10, 12),
+  },
+  {
+    id: 3,
+    studentId: 1,
+    studentName: "Tife Abayomi",
+    courseId: 3,
+    courseName: "Python for Data Science",
+    present: 7,
+    total: 9,
+    lastSession: "Mar 3, 2026",
+    status: deriveStatus(7, 9),
+  },
+  {
+    id: 4,
+    studentId: 1,
+    studentName: "Tife Abayomi",
+    courseId: 4,
+    courseName: "Terraform IaC",
+    present: 3,
+    total: 5,
+    lastSession: "Mar 1, 2026",
+    status: deriveStatus(3, 5),
+  },
+  // Amara Osei (student 2) — enrolled in 1,5
+  {
+    id: 5,
+    studentId: 2,
+    studentName: "Amara Osei",
+    courseId: 1,
+    courseName: "AWS Cloud Fundamentals",
+    present: 15,
+    total: 16,
+    lastSession: "Mar 5, 2026",
+    status: deriveStatus(15, 16),
+  },
+  {
+    id: 6,
+    studentId: 2,
+    studentName: "Amara Osei",
+    courseId: 5,
+    courseName: "Docker & Kubernetes",
+    present: 8,
+    total: 10,
+    lastSession: "Mar 4, 2026",
+    status: deriveStatus(8, 10),
+  },
+  // Kwame Mensah (student 3) — enrolled in 2,3,6
+  {
+    id: 7,
+    studentId: 3,
+    studentName: "Kwame Mensah",
+    courseId: 2,
+    courseName: "React + TypeScript Mastery",
+    present: 9,
+    total: 12,
+    lastSession: "Mar 4, 2026",
+    status: deriveStatus(9, 12),
+  },
+  {
+    id: 8,
+    studentId: 3,
+    studentName: "Kwame Mensah",
+    courseId: 3,
+    courseName: "Python for Data Science",
+    present: 6,
+    total: 9,
+    lastSession: "Mar 3, 2026",
+    status: deriveStatus(6, 9),
+  },
+  {
+    id: 9,
+    studentId: 3,
+    studentName: "Kwame Mensah",
+    courseId: 6,
+    courseName: "Machine Learning Foundations",
+    present: 4,
+    total: 7,
+    lastSession: "Feb 28, 2026",
+    status: deriveStatus(4, 7),
+  },
+  // Zara Nwosu (student 4) — enrolled in 1,2
+  {
+    id: 10,
+    studentId: 4,
+    studentName: "Zara Nwosu",
+    courseId: 1,
+    courseName: "AWS Cloud Fundamentals",
+    present: 11,
+    total: 16,
+    lastSession: "Mar 5, 2026",
+    status: deriveStatus(11, 16),
+  },
+  {
+    id: 11,
+    studentId: 4,
+    studentName: "Zara Nwosu",
+    courseId: 2,
+    courseName: "React + TypeScript Mastery",
+    present: 8,
+    total: 12,
+    lastSession: "Mar 4, 2026",
+    status: deriveStatus(8, 12),
+  },
+  // Emeka Diallo (student 5) — enrolled in 3,4,5
+  {
+    id: 12,
+    studentId: 5,
+    studentName: "Emeka Diallo",
+    courseId: 3,
+    courseName: "Python for Data Science",
+    present: 4,
+    total: 9,
+    lastSession: "Feb 25, 2026",
+    status: deriveStatus(4, 9),
+  },
+  {
+    id: 13,
+    studentId: 5,
+    studentName: "Emeka Diallo",
+    courseId: 4,
+    courseName: "Terraform IaC",
+    present: 2,
+    total: 5,
+    lastSession: "Feb 20, 2026",
+    status: deriveStatus(2, 5),
+  },
+  {
+    id: 14,
+    studentId: 5,
+    studentName: "Emeka Diallo",
+    courseId: 5,
+    courseName: "Docker & Kubernetes",
+    present: 3,
+    total: 10,
+    lastSession: "Feb 18, 2026",
+    status: deriveStatus(3, 10),
+  },
+  // Chisom Eze (student 6) — enrolled in 1,6
+  {
+    id: 15,
+    studentId: 6,
+    studentName: "Chisom Eze",
+    courseId: 1,
+    courseName: "AWS Cloud Fundamentals",
+    present: 16,
+    total: 16,
+    lastSession: "Mar 5, 2026",
+    status: deriveStatus(16, 16),
+  },
+  {
+    id: 16,
+    studentId: 6,
+    studentName: "Chisom Eze",
+    courseId: 6,
+    courseName: "Machine Learning Foundations",
+    present: 7,
+    total: 7,
+    lastSession: "Mar 2, 2026",
+    status: deriveStatus(7, 7),
+  },
+  // Folake Adeyemi (student 7) — enrolled in 2,4,5
+  {
+    id: 17,
+    studentId: 7,
+    studentName: "Folake Adeyemi",
+    courseId: 2,
+    courseName: "React + TypeScript Mastery",
+    present: 11,
+    total: 12,
+    lastSession: "Mar 4, 2026",
+    status: deriveStatus(11, 12),
+  },
+  {
+    id: 18,
+    studentId: 7,
+    studentName: "Folake Adeyemi",
+    courseId: 4,
+    courseName: "Terraform IaC",
+    present: 4,
+    total: 5,
+    lastSession: "Mar 1, 2026",
+    status: deriveStatus(4, 5),
+  },
+  {
+    id: 19,
+    studentId: 7,
+    studentName: "Folake Adeyemi",
+    courseId: 5,
+    courseName: "Docker & Kubernetes",
+    present: 9,
+    total: 10,
+    lastSession: "Mar 4, 2026",
+    status: deriveStatus(9, 10),
+  },
+  // Olumide Bello (student 8) — enrolled in 1,3
+  {
+    id: 20,
+    studentId: 8,
+    studentName: "Olumide Bello",
+    courseId: 1,
+    courseName: "AWS Cloud Fundamentals",
+    present: 13,
+    total: 16,
+    lastSession: "Mar 5, 2026",
+    status: deriveStatus(13, 16),
+  },
+  {
+    id: 21,
+    studentId: 8,
+    studentName: "Olumide Bello",
+    courseId: 3,
+    courseName: "Python for Data Science",
+    present: 5,
+    total: 9,
+    lastSession: "Mar 3, 2026",
+    status: deriveStatus(5, 9),
+  },
+];
