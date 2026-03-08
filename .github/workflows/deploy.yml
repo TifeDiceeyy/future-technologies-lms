@@ -33,7 +33,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync dist/ s3://mind-campus --delete
+        run: aws s3 sync dist/ s3://mindcampus --delete
 
       - name: Invalidate CloudFront cache
         run: |
