@@ -1,20 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, BookOpen, Loader2, AlertCircle } from "lucide-react";
-import { apiFetch } from "../api/client";
+import { Search, BookOpen } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
-
-interface PublicCourse {
-  id: string | number;
-  title: string;
-  description?: string;
-  instructor?: string;
-  modules?: number;
-  duration?: string;
-  level?: string;
-  category?: string;
-  thumbnail?: string;
-}
+import { useApp } from "../store/AppContext";
 
 const CARD_STYLE = {
   backgroundColor: "var(--bauhaus-card-bg)",
@@ -34,24 +22,10 @@ const accent = (idx: number) => ACCENT_POOL[idx % ACCENT_POOL.length];
 export default function PublicCourses() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { courses } = useApp();
   const isAuthenticated = !!currentUser;
 
-  const [courses, setCourses] = useState<PublicCourse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    apiFetch<PublicCourse[]>("/courses")
-      .then((data) => {
-        setCourses(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message ?? "Failed to load courses.");
-        setLoading(false);
-      });
-  }, []);
 
   const filtered = courses.filter(
     (c) =>
@@ -141,29 +115,7 @@ export default function PublicCourses() {
           />
         </div>
 
-        {/* States */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <Loader2 size={32} className="animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading courses…</p>
-          </div>
-        )}
-
-        {!loading && error && (
-          <div
-            className="flex items-center gap-3 p-5 rounded-xl max-w-md mx-auto"
-            style={{
-              backgroundColor: "#fc680015",
-              border: "1px solid #fc680033",
-              color: "#fc6800",
-            }}
-          >
-            <AlertCircle size={18} />
-            <p className="text-sm">{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && filtered.length === 0 && (
+        {filtered.length === 0 && (
           <div className="text-center py-20">
             <BookOpen
               size={40}
@@ -178,7 +130,7 @@ export default function PublicCourses() {
         )}
 
         {/* Course grid */}
-        {!loading && !error && filtered.length > 0 && (
+        {filtered.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((course, idx) => (
               <div
@@ -264,7 +216,7 @@ export default function PublicCourses() {
         )}
 
         {/* Bottom CTA for unauthenticated */}
-        {!loading && !error && !isAuthenticated && filtered.length > 0 && (
+        {!isAuthenticated && filtered.length > 0 && (
           <div
             className="mt-12 rounded-2xl px-8 py-8 text-center"
             style={{
