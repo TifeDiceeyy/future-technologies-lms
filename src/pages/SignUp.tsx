@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Zap, Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
+import { signUp } from "aws-amplify/auth";
 
 const plans = [
   {
@@ -12,7 +13,7 @@ const plans = [
   {
     id: "pro",
     label: "Pro",
-    price: "$12/mo",
+    price: "$29/mo",
     perks: [
       "Unlimited courses",
       "Certificates",
@@ -23,9 +24,80 @@ const plans = [
 ];
 
 export default function SignUp() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("free");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = "Full name is required.";
+    if (!form.email.trim()) {
+      newErrors.email = "Email address is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      newErrors.email = "Please enter a valid email.";
+    }
+    if (!form.password.trim()) {
+      newErrors.password = "Password is required.";
+    } else if (form.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters.";
+    } else if (
+      !/[A-Z]/.test(form.password) ||
+      !/[0-9]/.test(form.password) ||
+      !/[^A-Za-z0-9]/.test(form.password)
+    ) {
+      newErrors.password =
+        "Password needs 1 uppercase, 1 number, 1 special character.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError("");
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      await signUp({
+        username: form.email.trim(),
+        password: form.password,
+        options: {
+          userAttributes: {
+            email: form.email.trim(),
+            name: form.name.trim(),
+            "custom:role": "student",
+            "custom:plan": selectedPlan,
+          },
+        },
+      });
+      navigate("/verify", {
+        state: { email: form.email.trim(), fromSignup: true },
+      });
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      const message = (() => {
+        switch (e.name) {
+          case "UsernameExistsException":
+            return "An account with this email already exists. Try logging in.";
+          case "InvalidPasswordException":
+            return "Password does not meet requirements. Try a stronger one.";
+          case "InvalidParameterException":
+            return "Please check your details and try again.";
+          case "TooManyRequestsException":
+            return "Too many attempts. Please wait a moment.";
+          default:
+            return e.message || "Sign up failed. Please try again.";
+        }
+      })();
+      setSubmitError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-8 py-12">
@@ -89,7 +161,7 @@ export default function SignUp() {
           ))}
         </div>
 
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-foreground text-sm font-medium mb-2">
               Full Name
@@ -107,6 +179,9 @@ export default function SignUp() {
                 className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-colors"
               />
             </div>
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div>
@@ -126,6 +201,9 @@ export default function SignUp() {
                 className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-colors"
               />
             </div>
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
@@ -152,13 +230,23 @@ export default function SignUp() {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
           </div>
+
+          {submitError && (
+            <p className="text-red-500 text-sm text-center">{submitError}</p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/80 text-white font-semibold py-3 rounded-xl transition-all shadow-sm mt-2"
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary/80 text-white font-semibold py-3 rounded-xl transition-all shadow-sm mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Create Account — {selectedPlan === "free" ? "Free" : "$12/mo"}
+            {loading
+              ? "Creating account..."
+              : `Create Account — ${selectedPlan === "free" ? "Free" : "$29/mo"}`}
           </button>
         </form>
 

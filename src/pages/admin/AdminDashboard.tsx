@@ -80,8 +80,8 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="flex items-start justify-between mb-8">
+    <div className="p-4 md:p-8 max-w-6xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
           <p
             className="text-sm mb-1"
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
             Friday, March 6, 2026
           </p>
           <h1
-            className="text-3xl font-bold"
+            className="text-2xl md:text-3xl font-bold"
             style={{ color: "var(--bauhaus-card-inscription-main)" }}
           >
             Admin Dashboard
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map(({ label, value, total, icon: Icon, accentColor, link }) => (
           <Link
             key={label}
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Secondary metrics */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
         {[
           {
             icon: TrendingUp,
@@ -199,9 +199,12 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Announcements */}
-        <div className="col-span-2 rounded-2xl p-6" style={CARD_STYLE}>
+        <div
+          className="md:col-span-2 rounded-2xl p-5 md:p-6"
+          style={CARD_STYLE}
+        >
           <div className="flex items-center justify-between mb-5">
             <h2
               className="font-semibold flex items-center gap-2"

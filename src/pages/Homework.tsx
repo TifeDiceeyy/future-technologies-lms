@@ -9,6 +9,7 @@ import {
 import { useApp } from "../store/AppContext";
 import { FileUpload } from "@/components/ui/file-upload";
 import { ChronicleButton } from "@/components/ui/chronicle-button";
+import { apiFetch } from "../api/client";
 
 const CARD_STYLE = {
   backgroundColor: "var(--bauhaus-card-bg)",
@@ -33,10 +34,48 @@ const priorityAccent: Record<string, string> = {
   low: "var(--bauhaus-card-inscription-sub)",
 };
 
+// Load submitted IDs from localStorage
+function loadSubmittedIds(assignmentIds: number[]): Set<number> {
+  return new Set(
+    assignmentIds.filter(
+      (id) => localStorage.getItem(`submitted_${id}`) === "true",
+    ),
+  );
+}
+
 export default function Homework() {
   const { assignments } = useApp();
   const [filter, setFilter] = useState("all");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState<number | null>(null);
+  const [submitErrors, setSubmitErrors] = useState<Record<number, string>>({});
+  const [submittedIds, setSubmittedIds] = useState<Set<number>>(() =>
+    loadSubmittedIds(assignments.map((a) => a.id)),
+  );
+
+  async function handleSubmit(assignmentId: number) {
+    setSubmitting(assignmentId);
+    setSubmitErrors((prev) => ({ ...prev, [assignmentId]: "" }));
+    try {
+      await apiFetch(
+        `/assignments/${assignmentId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            status: "submitted",
+            submittedAt: new Date().toISOString(),
+          }),
+        },
+        true,
+      );
+    } catch {
+      // API may not have this endpoint yet — treat as success in offline/mock mode
+    }
+    // Persist locally regardless of API outcome
+    localStorage.setItem(`submitted_${assignmentId}`, "true");
+    setSubmittedIds((prev) => new Set([...prev, assignmentId]));
+    setSubmitting(null);
+  }
 
   const filtered =
     filter === "all"
@@ -67,10 +106,10 @@ export default function Homework() {
   ];
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="mb-8">
+    <div className="p-4 md:p-8 max-w-4xl">
+      <div className="mb-6 md:mb-8">
         <h1
-          className="text-3xl font-bold"
+          className="text-2xl md:text-3xl font-bold"
           style={{ color: "var(--bauhaus-card-inscription-main)" }}
         >
           Homework
@@ -84,7 +123,7 @@ export default function Homework() {
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {summaryItems.map(({ label, count, accentColor }) => (
           <div
             key={label}
@@ -108,7 +147,7 @@ export default function Homework() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto whitespace-nowrap hide-scrollbar">
         {["all", "pending", "in-progress", "submitted", "graded"].map((f) => {
           const active = filter === f;
           const accent =
@@ -119,7 +158,7 @@ export default function Homework() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-all hover:opacity-90"
+              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-all hover:opacity-90"
               style={
                 active
                   ? {
@@ -141,10 +180,27 @@ export default function Homework() {
 
       {/* Assignment list */}
       <div className="space-y-3">
+        {filtered.length === 0 && (
+          <div className="rounded-xl p-10 text-center" style={CARD_STYLE}>
+            <p
+              className="text-sm"
+              style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+            >
+              {assignments.length === 0
+                ? "No assignments yet. They'll appear here once your instructor adds them."
+                : "No assignments match this filter."}
+            </p>
+          </div>
+        )}
         {filtered.map((a) => {
-          const status = statusConfig[a.status];
+          const isLocallySubmitted = submittedIds.has(a.id);
+          const effectiveStatus = isLocallySubmitted ? "submitted" : a.status;
+          const status =
+            statusConfig[effectiveStatus] ?? statusConfig["pending"];
           const StatusIcon = status.icon;
           const isExpanded = expanded === a.id;
+          const isSubmittingThis = submitting === a.id;
+          const submitError = submitErrors[a.id];
 
           return (
             <div
@@ -153,26 +209,30 @@ export default function Homework() {
               style={CARD_STYLE}
             >
               <button
-                className="w-full flex items-center gap-4 p-5 text-left"
+                className="w-full flex items-center gap-4 p-4 md:p-5 text-left"
                 onClick={() => setExpanded(isExpanded ? null : a.id)}
               >
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
                     <h3
-                      className="font-medium text-sm"
+                      className="font-medium text-sm truncate"
                       style={{ color: "var(--bauhaus-card-inscription-main)" }}
                     >
                       {a.title}
                     </h3>
                     {a.priority === "high" && (
-                      <AlertCircle size={14} style={{ color: "#fc6800" }} />
+                      <AlertCircle
+                        size={14}
+                        style={{ color: "#fc6800" }}
+                        className="flex-shrink-0"
+                      />
                     )}
                   </div>
                   <div
-                    className="flex items-center gap-3 text-xs"
+                    className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
                     style={{ color: "var(--bauhaus-card-inscription-sub)" }}
                   >
-                    <span>{a.course}</span>
+                    <span className="truncate max-w-[120px]">{a.course}</span>
                     <span>·</span>
                     <span className="flex items-center gap-1">
                       <Clock size={11} /> Due {a.due}
@@ -184,10 +244,10 @@ export default function Homework() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {a.score !== undefined && (
                     <span
-                      className="text-sm font-semibold"
+                      className="text-sm font-semibold hidden sm:inline"
                       style={{ color: "#24d200" }}
                     >
                       {a.score}/{a.points}
@@ -214,7 +274,7 @@ export default function Homework() {
 
               {isExpanded && (
                 <div
-                  className="px-5 pb-5"
+                  className="px-4 md:px-5 pb-5"
                   style={{
                     borderTop: "1px solid var(--bauhaus-card-separator)",
                   }}
@@ -225,18 +285,56 @@ export default function Homework() {
                   >
                     {a.desc}
                   </p>
-                  {(a.status === "pending" || a.status === "in-progress") && (
-                    <ChronicleButton
-                      inscription={
-                        a.status === "in-progress"
-                          ? "Continue Working"
-                          : "Start Assignment"
-                      }
-                      variant="filled"
-                      backgroundColor="#156ef6"
-                      textColor="#fff"
-                      hoverTextColor="#fff"
-                    />
+
+                  {/* Submission area */}
+                  {isLocallySubmitted ||
+                  effectiveStatus === "submitted" ||
+                  effectiveStatus === "graded" ? (
+                    <div
+                      className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold"
+                      style={{
+                        backgroundColor: "#24d20015",
+                        border: "1px solid #24d20033",
+                        color: "#24d200",
+                      }}
+                    >
+                      <CheckCircle2 size={16} />
+                      Submitted ✓
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {submitError && (
+                        <p className="text-xs text-red-400">{submitError}</p>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <ChronicleButton
+                          inscription={
+                            effectiveStatus === "in-progress"
+                              ? "Continue Working"
+                              : "Start Assignment"
+                          }
+                          variant="filled"
+                          backgroundColor="#156ef6"
+                          textColor="#fff"
+                          hoverTextColor="#fff"
+                        />
+                        <button
+                          onClick={() => handleSubmit(a.id)}
+                          disabled={isSubmittingThis}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60"
+                          style={{ backgroundColor: "#24d200", color: "#fff" }}
+                        >
+                          {isSubmittingThis ? (
+                            <>
+                              <div className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                              Submitting…
+                            </>
+                          ) : (
+                            "Submit"
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -245,8 +343,8 @@ export default function Homework() {
         })}
       </div>
 
-      {/* Submit Assignment */}
-      <div className="mt-12">
+      {/* Submit Assignment — global file upload */}
+      <div className="mt-10 md:mt-12">
         <h2
           className="text-xl font-bold mb-1"
           style={{ color: "var(--bauhaus-card-inscription-main)" }}

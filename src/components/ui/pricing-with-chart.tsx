@@ -1,4 +1,5 @@
 import { CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ButtonCta } from "@/components/ui/button-shiny";
 import { GradientButton } from "@/components/ui/gradient-button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
@@ -83,6 +84,7 @@ const chartConfig: ChartConfig = {
 /* ─── Component ────────────────────────────────────────────── */
 
 export function PricingWithChart() {
+  const navigate = useNavigate();
   return (
     <div className="w-full space-y-16">
       {/* Pricing cards */}
@@ -119,13 +121,27 @@ export function PricingWithChart() {
 
             <CardContent className="space-y-4">
               {plan.featured ? (
-                <ButtonCta label="Get Started — Pro" className="w-full" />
+                <ButtonCta
+                  label="Get Started — Pro"
+                  className="w-full"
+                  onClick={() =>
+                    navigate("/register", { state: { plan: "pro" } })
+                  }
+                />
               ) : plan.name === "Free" ? (
-                <GradientButton className="w-full">
+                <GradientButton
+                  className="w-full"
+                  onClick={() => navigate("/register")}
+                >
                   Get Started Free
                 </GradientButton>
               ) : (
-                <button className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all border border-border hover:border-primary/40 hover:bg-secondary text-foreground">
+                <button
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all border border-border hover:border-primary/40 hover:bg-secondary text-foreground"
+                  onClick={() =>
+                    navigate("/register", { state: { plan: "teams" } })
+                  }
+                >
                   {`Choose ${plan.name}`}
                 </button>
               )}

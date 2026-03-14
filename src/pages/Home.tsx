@@ -8,90 +8,89 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { BauhausCard } from "@/components/ui/bauhaus-card";
+import { useApp } from "@/store/AppContext";
+import { useAuth } from "@/store/AuthContext";
 
 const CARD_STYLE = {
   backgroundColor: "var(--bauhaus-card-bg)",
   border: "1px solid var(--bauhaus-card-separator)",
 };
 
-const quickLinks = [
-  {
-    to: "/courses",
-    icon: BookOpen,
-    label: "My Courses",
-    desc: "4 active",
-    accentColor: "#156ef6",
-  },
-  {
-    to: "/dashboard",
-    icon: LayoutDashboard,
-    label: "Dashboard",
-    desc: "View progress",
-    accentColor: "#24d200",
-  },
-  {
-    to: "/homework",
-    icon: FileText,
-    label: "Homework",
-    desc: "2 due soon",
-    accentColor: "#fc6800",
-  },
-  {
-    to: "/exams",
-    icon: ClipboardList,
-    label: "Exams",
-    desc: "1 upcoming",
-    accentColor: "#8f10f6",
-  },
+const ACCENT_POOL = [
+  "#156ef6",
+  "#24d200",
+  "#fc6800",
+  "#8f10f6",
+  "#00b4d8",
+  "#e91e8c",
 ];
+const courseAccent = (id: number) => ACCENT_POOL[(id - 1) % ACCENT_POOL.length];
 
-const recentCourses = [
-  {
-    id: "1",
-    title: "AWS Cloud Fundamentals",
-    progress: 68,
-    module: "Module 5: S3 + CloudFront",
-    time: "2h left",
-    accentColor: "#156ef6",
-  },
-  {
-    id: "2",
-    title: "React + TypeScript Mastery",
-    progress: 42,
-    module: "Module 3: Hooks & State",
-    time: "4h left",
-    accentColor: "#24d200",
-  },
-  {
-    id: "3",
-    title: "Python for Data Science",
-    progress: 15,
-    module: "Module 1: Getting Started",
-    time: "8h left",
-    accentColor: "#fc6800",
-  },
-];
-
-const announcements = [
-  {
-    title: "New course available: Terraform IaC",
-    time: "2h ago",
-    accentColor: "#156ef6",
-  },
-  {
-    title: "Assignment 3 graded — 92/100",
-    time: "5h ago",
-    accentColor: "#24d200",
-  },
-  {
-    title: "Live session: AWS ECS Fargate — Mar 8",
-    time: "1d ago",
-    accentColor: "#8f10f6",
-  },
-];
+const TYPE_COLOR: Record<string, string> = {
+  info: "#156ef6",
+  success: "#24d200",
+  warning: "#fc6800",
+  event: "#8f10f6",
+};
 
 export default function Home() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { courses, assignments, exams, announcements } = useApp();
+
+  const enrolledCourses = courses.filter((c) => c.enrolled);
+  const overallProgress = enrolledCourses.length
+    ? Math.round(
+        enrolledCourses.reduce((s, c) => s + c.progress, 0) /
+          enrolledCourses.length,
+      )
+    : 0;
+
+  const pendingCount = assignments.filter(
+    (a) => a.status === "pending" || a.status === "in-progress",
+  ).length;
+  const upcomingExams = exams.filter((e) => e.status === "upcoming").length;
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const quickLinks = [
+    {
+      to: "/courses",
+      icon: BookOpen,
+      label: "My Courses",
+      desc: `${enrolledCourses.length} active`,
+      accentColor: "#156ef6",
+    },
+    {
+      to: "/dashboard",
+      icon: LayoutDashboard,
+      label: "Dashboard",
+      desc: "View progress",
+      accentColor: "#24d200",
+    },
+    {
+      to: "/homework",
+      icon: FileText,
+      label: "Homework",
+      desc: `${pendingCount} due soon`,
+      accentColor: "#fc6800",
+    },
+    {
+      to: "/exams",
+      icon: ClipboardList,
+      label: "Exams",
+      desc: `${upcomingExams} upcoming`,
+      accentColor: "#8f10f6",
+    },
+  ];
+
+  const recentCourses = enrolledCourses.slice(0, 3);
+  const recentAnnouncements = announcements.slice(0, 3);
 
   return (
     <div className="p-8 max-w-6xl">
@@ -101,10 +100,11 @@ export default function Home() {
           className="text-sm mb-1"
           style={{ color: "var(--bauhaus-card-inscription-sub)" }}
         >
-          Friday, March 6, 2026
+          {today}
         </p>
+        {/* Bug 9 fix: was "text-3xl" — too large on mobile → text-2xl md:text-3xl */}
         <h1
-          className="text-3xl font-bold"
+          className="text-2xl md:text-3xl font-bold"
           style={{ color: "var(--bauhaus-card-inscription-main)" }}
         >
           Your Learning Organized in{" "}
@@ -116,7 +116,8 @@ export default function Home() {
           className="mt-1"
           style={{ color: "var(--bauhaus-card-inscription-sub)" }}
         >
-          Welcome back, Tife. Keep the momentum going.
+          Welcome back, {currentUser?.name?.split(" ")[0] ?? "there"}. Keep the
+          momentum going.
         </p>
       </div>
 
@@ -140,7 +141,7 @@ export default function Home() {
               className="font-bold text-xl"
               style={{ color: "var(--bauhaus-card-inscription-main)" }}
             >
-              42%
+              {overallProgress}%
             </p>
             <p
               className="text-xs"
@@ -155,9 +156,9 @@ export default function Home() {
           style={{ backgroundColor: "var(--bauhaus-card-separator)" }}
         />
         {[
-          { value: "4", label: "Active Courses" },
-          { value: "12", label: "Hours This Week" },
-          { value: "3", label: "Certificates" },
+          { value: String(enrolledCourses.length), label: "Active Courses" },
+          { value: String(pendingCount), label: "Pending Tasks" },
+          { value: String(upcomingExams), label: "Upcoming Exams" },
         ].map(({ value, label }, i) => (
           <div key={label} className="flex items-center gap-8">
             {i > 0 && (
@@ -235,26 +236,45 @@ export default function Home() {
             All courses <ArrowRight size={14} />
           </Link>
         </div>
-        <div className="flex gap-6 overflow-x-auto pb-2">
-          {recentCourses.map((course) => (
-            <div key={course.id} className="flex-shrink-0">
-              <BauhausCard
-                id={course.id}
-                accentColor={course.accentColor}
-                topInscription={course.time}
-                mainText={course.title}
-                subMainText={course.module}
-                progressBarInscription="Progress:"
-                progress={course.progress}
-                progressValue={`${course.progress}%`}
-                filledButtonInscription="Continue"
-                outlinedButtonInscription="Details"
-                onFilledButtonClick={() => navigate(`/courses/${course.id}`)}
-                onOutlinedButtonClick={() => navigate("/courses")}
-              />
-            </div>
-          ))}
-        </div>
+        {recentCourses.length === 0 ? (
+          <div className="rounded-xl p-8 text-center" style={CARD_STYLE}>
+            <p
+              className="text-sm"
+              style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+            >
+              No courses enrolled yet.{" "}
+              <Link
+                to="/courses"
+                className="underline"
+                style={{ color: "var(--bauhaus-card-inscription-top)" }}
+              >
+                Browse courses
+              </Link>{" "}
+              to get started.
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-6 overflow-x-auto pb-2">
+            {recentCourses.map((course) => (
+              <div key={course.id} className="flex-shrink-0">
+                <BauhausCard
+                  id={String(course.id)}
+                  accentColor={courseAccent(course.id)}
+                  topInscription={`${course.modules - course.modulesCompleted} modules left`}
+                  mainText={course.title}
+                  subMainText={`Module ${course.modulesCompleted + 1} of ${course.modules}`}
+                  progressBarInscription="Progress:"
+                  progress={course.progress}
+                  progressValue={`${course.progress}%`}
+                  filledButtonInscription="Continue"
+                  outlinedButtonInscription="Details"
+                  onFilledButtonClick={() => navigate(`/courses/${course.id}`)}
+                  onOutlinedButtonClick={() => navigate("/courses")}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Announcements */}
@@ -265,30 +285,41 @@ export default function Home() {
         >
           Announcements
         </h2>
-        <div className="space-y-4">
-          {announcements.map((item) => (
-            <div key={item.title} className="flex gap-3">
-              <div
-                className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                style={{ backgroundColor: item.accentColor }}
-              />
-              <div>
-                <p
-                  className="text-sm leading-snug"
-                  style={{ color: "var(--bauhaus-card-inscription-main)" }}
-                >
-                  {item.title}
-                </p>
-                <p
-                  className="text-xs mt-0.5"
-                  style={{ color: "var(--bauhaus-card-inscription-sub)" }}
-                >
-                  {item.time}
-                </p>
+        {recentAnnouncements.length === 0 ? (
+          <p
+            className="text-sm py-2"
+            style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+          >
+            No announcements yet.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {recentAnnouncements.map((item) => (
+              <div key={item.id} className="flex gap-3">
+                <div
+                  className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                  style={{
+                    backgroundColor: TYPE_COLOR[item.type] ?? "#156ef6",
+                  }}
+                />
+                <div>
+                  <p
+                    className="text-sm leading-snug"
+                    style={{ color: "var(--bauhaus-card-inscription-main)" }}
+                  >
+                    {item.title}
+                  </p>
+                  <p
+                    className="text-xs mt-0.5"
+                    style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+                  >
+                    {item.createdAt}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

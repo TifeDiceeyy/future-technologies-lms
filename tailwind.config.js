@@ -5,6 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ── Semantic tokens (CSS variables) ─────────────────────────
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         card: {
@@ -33,20 +34,40 @@ export default {
           DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
           foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
         },
+
+        // ── STUD. design-system semantic tokens ──────────────────────
+        // Use these for success/warning/danger states throughout the app
+        success: {
+          DEFAULT: "#10B981",
+          foreground: "#FFFFFF",
+        },
+        warning: {
+          DEFAULT: "#F59E0B",
+          foreground: "#FFFFFF",
+        },
+        danger: {
+          DEFAULT: "#EF4444",
+          foreground: "#FFFFFF",
+        },
       },
+
       fontFamily: {
+        // Primary: Inter (loaded from Google Fonts in index.html)
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
+
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+
       boxShadow: {
-        "glow-primary": "0 0 20px hsl(var(--primary) / 0.15)",
-        "glow-sm-primary": "0 0 8px  hsl(var(--primary) / 0.10)",
+        "glow-primary": "0 0 20px hsl(var(--primary) / 0.25)",
+        "glow-sm-primary": "0 0 8px  hsl(var(--primary) / 0.15)",
       },
+
       keyframes: {
         "scroll-left": {
           "0%": { transform: "translateX(0)" },
@@ -66,11 +87,22 @@ export default {
               "rotate(360deg) translateY(calc(var(--radius)*1px)) rotate(-360deg)",
           },
         },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "sheet-up": {
+          "0%": { transform: "translateY(100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
       },
+
       animation: {
         "scroll-left": "scroll-left 30s linear infinite",
         "scroll-right": "scroll-right 30s linear infinite",
         orbit: "orbit calc(var(--duration)*1s) linear infinite",
+        "fade-in-up": "fade-in-up 0.3s ease-out",
+        "sheet-up": "sheet-up 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
       },
     },
   },

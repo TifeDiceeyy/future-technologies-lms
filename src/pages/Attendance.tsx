@@ -1,4 +1,6 @@
 import { TrendingUp, AlertCircle } from "lucide-react";
+import { useApp } from "@/store/AppContext";
+import { useAuth } from "@/store/AuthContext";
 
 const CARD_STYLE = {
   backgroundColor: "var(--bauhaus-card-bg)",
@@ -8,78 +10,36 @@ const PROGRESS_TRACK = {
   backgroundColor: "var(--bauhaus-card-progress-bar-bg)",
 };
 
-const COURSE_COLORS = ["#156ef6", "#24d200", "#fc6800"];
-
-const attendanceData = {
-  "AWS Cloud Fundamentals": {
-    present: 14,
-    total: 16,
-    sessions: [1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-    accentColor: "#156ef6",
-  },
-  "React + TypeScript Mastery": {
-    present: 10,
-    total: 12,
-    sessions: [1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1],
-    accentColor: "#24d200",
-  },
-  "Python for Data Science": {
-    present: 7,
-    total: 9,
-    sessions: [1, 1, 1, 0, 1, 1, 1, 0, 1],
-    accentColor: "#fc6800",
-  },
-};
-
-const recentSessions = [
-  {
-    date: "Mar 5, 2026",
-    course: "AWS Cloud Fundamentals",
-    topic: "S3 + CloudFront Deep Dive",
-    attended: true,
-  },
-  {
-    date: "Mar 4, 2026",
-    course: "React + TypeScript Mastery",
-    topic: "Custom Hooks & Context API",
-    attended: true,
-  },
-  {
-    date: "Mar 3, 2026",
-    course: "Python for Data Science",
-    topic: "Pandas DataFrames",
-    attended: false,
-  },
-  {
-    date: "Mar 1, 2026",
-    course: "AWS Cloud Fundamentals",
-    topic: "EC2 Auto Scaling",
-    attended: true,
-  },
-  {
-    date: "Feb 28, 2026",
-    course: "React + TypeScript Mastery",
-    topic: "TypeScript Generics",
-    attended: true,
-  },
-  {
-    date: "Feb 27, 2026",
-    course: "Python for Data Science",
-    topic: "NumPy Arrays",
-    attended: true,
-  },
+const ACCENT_POOL = [
+  "#156ef6",
+  "#24d200",
+  "#fc6800",
+  "#8f10f6",
+  "#00b4d8",
+  "#e91e8c",
 ];
+const courseAccent = (id: number) => ACCENT_POOL[(id - 1) % ACCENT_POOL.length];
+
+// Synthetic session dots: first `present` slots attended, rest missed
+function buildSessionDots(present: number, total: number): number[] {
+  return Array.from({ length: total }, (_, i) => (i < present ? 1 : 0));
+}
 
 export default function Attendance() {
-  const totalPresent = Object.values(attendanceData).reduce(
-    (s, c) => s + c.present,
-    0,
+  const { attendance } = useApp();
+  const { currentUser } = useAuth();
+
+  if (!currentUser)
+    return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
+  const myId = currentUser.id;
+  const myAttendance = attendance.filter(
+    (r) => String(r.studentId) === String(myId),
   );
-  const totalSessions = Object.values(attendanceData).reduce(
-    (s, c) => s + c.total,
-    0,
-  );
-  const overallRate = Math.round((totalPresent / totalSessions) * 100);
+
+  const totalPresent = myAttendance.reduce((s, r) => s + r.present, 0);
+  const totalSessions = myAttendance.reduce((s, r) => s + r.total, 0);
+  const overallRate =
+    totalSessions > 0 ? Math.round((totalPresent / totalSessions) * 100) : 0;
 
   return (
     <div className="p-8 max-w-4xl">
@@ -184,22 +144,32 @@ export default function Attendance() {
         >
           By Course
         </h2>
+        {myAttendance.length === 0 ? (
+          <p
+            className="text-sm py-4 text-center"
+            style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+          >
+            No attendance records yet. Records will appear once sessions are
+            logged.
+          </p>
+        ) : null}
         <div className="space-y-6">
-          {Object.entries(attendanceData).map(([course, data], idx) => {
-            const rate = Math.round((data.present / data.total) * 100);
+          {myAttendance.map((record) => {
+            const rate = Math.round((record.present / record.total) * 100);
             const isWarning = rate < 75;
             const accentColor = isWarning
               ? "#fc6800"
-              : (COURSE_COLORS[idx] ?? "#156ef6");
+              : courseAccent(record.courseId);
+            const dots = buildSessionDots(record.present, record.total);
             return (
-              <div key={course}>
+              <div key={record.id}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <p
                       className="text-sm font-medium"
                       style={{ color: "var(--bauhaus-card-inscription-main)" }}
                     >
-                      {course}
+                      {record.courseName}
                     </p>
                     {isWarning && (
                       <AlertCircle size={13} style={{ color: "#fc6800" }} />
@@ -210,7 +180,7 @@ export default function Attendance() {
                     style={{ color: "var(--bauhaus-card-inscription-sub)" }}
                   >
                     <span>
-                      {data.present}/{data.total} sessions
+                      {record.present}/{record.total} sessions
                     </span>
                     <span
                       className="font-semibold"
@@ -231,7 +201,7 @@ export default function Attendance() {
                 </div>
                 {/* Session dots */}
                 <div className="flex gap-1 flex-wrap">
-                  {data.sessions.map((attended, i) => (
+                  {dots.map((attended, i) => (
                     <div
                       key={i}
                       className="w-4 h-4 rounded-sm"
@@ -247,63 +217,6 @@ export default function Attendance() {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* Recent sessions */}
-      <div className="rounded-2xl p-6" style={CARD_STYLE}>
-        <h2
-          className="font-semibold mb-5"
-          style={{ color: "var(--bauhaus-card-inscription-main)" }}
-        >
-          Recent Sessions
-        </h2>
-        <div className="space-y-2">
-          {recentSessions.map((session, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between py-3"
-              style={{
-                borderBottom:
-                  i < recentSessions.length - 1
-                    ? "1px solid var(--bauhaus-card-separator)"
-                    : "none",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{
-                    backgroundColor: session.attended ? "#24d200" : "#fc6800",
-                  }}
-                />
-                <div>
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--bauhaus-card-inscription-main)" }}
-                  >
-                    {session.topic}
-                  </p>
-                  <p
-                    className="text-xs"
-                    style={{ color: "var(--bauhaus-card-inscription-sub)" }}
-                  >
-                    {session.course} · {session.date}
-                  </p>
-                </div>
-              </div>
-              <span
-                className="text-xs font-medium px-2.5 py-0.5 rounded-full"
-                style={{
-                  color: session.attended ? "#24d200" : "#fc6800",
-                  backgroundColor: session.attended ? "#24d20015" : "#fc680015",
-                  border: `1px solid ${session.attended ? "#24d20033" : "#fc680033"}`,
-                }}
-              >
-                {session.attended ? "Present" : "Absent"}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

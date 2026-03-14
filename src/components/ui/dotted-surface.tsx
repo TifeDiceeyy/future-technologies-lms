@@ -124,7 +124,6 @@ export function DottedSurface({ className, ...props }: DottedSurfaceProps) {
         }
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDark]);
 
   return (

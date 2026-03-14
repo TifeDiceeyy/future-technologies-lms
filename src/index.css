@@ -2,38 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Light mode ───────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   STUD. Design System — CSS Custom Properties
+   Light mode: white surface, indigo accent (#6366F1)
+   Dark mode:  deep navy surface (#0F0F1A), same indigo accent
+   ───────────────────────────────────────────────────────────────── */
+
+/* ── Light mode ────────────────────────────────────────────────── */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 97%;
-  --card-foreground: 222 47% 11%;
-  --muted: 210 40% 94%;
-  --muted-foreground: 215 16% 45%;
-  --border: 214 32% 86%;
-  --input: 214 32% 88%;
-  --primary: 222 47% 11%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 210 40% 94%;
-  --secondary-foreground: 222 47% 11%;
-  --accent: 210 40% 94%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 84% 60%;
+  /* Surfaces */
+  --background: 0 0% 100%; /* #FFFFFF  bg-base      */
+  --foreground: 221 39% 11%; /* #111827  text-primary  */
+  --card: 220 9% 95%; /* #F3F4F6  bg-card       */
+  --card-foreground: 221 39% 11%; /* #111827               */
+  --muted: 210 17% 98%; /* #F8F9FA  bg-surface    */
+  --muted-foreground: 220 9% 46%; /* #6B7280  text-secondary*/
+  --border: 220 13% 91%; /* #E5E7EB               */
+  --input: 220 13% 91%; /* #E5E7EB               */
+
+  /* Primary accent — indigo #6366F1 */
+  --primary: 239 84% 67%; /* #6366F1               */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF               */
+
+  /* Secondary / ghost surfaces */
+  --secondary: 220 9% 95%; /* #F3F4F6               */
+  --secondary-foreground: 221 39% 11%; /* #111827               */
+
+  /* Accent (same as primary per STUD. spec) */
+  --accent: 239 84% 67%; /* #6366F1               */
+  --accent-foreground: 0 0% 100%; /* #FFFFFF               */
+
+  /* Destructive */
+  --destructive: 0 84% 60%; /* #EF4444               */
   --destructive-foreground: 0 0% 100%;
-  --ring: 222 47% 11%;
+
+  /* Focus ring */
+  --ring: 239 84% 67%; /* indigo                */
+
+  /* Border radius base */
   --radius: 0.75rem;
-  /* Floating shape tints */
-  --shape-blue: 213 94% 40%;
-  --shape-green: 142 76% 36%;
-  --shape-purple: 270 91% 55%;
-  /* Chart */
-  --chart-4: hsl(263 70% 60%);
-  /* Bauhaus Card */
+
+  /* Bauhaus card — light */
   --bauhaus-card-bg: #f0f4fb;
   --bauhaus-card-separator: #d3dce8;
   --bauhaus-card-inscription-top: #3b4252;
   --bauhaus-card-inscription-main: #111014;
-  --bauhaus-card-inscription-sub: #5e6473;
+  --bauhaus-card-inscription-sub: #8b95a8;
   --bauhaus-card-inscription-progress-label: #454f55;
   --bauhaus-card-inscription-progress-value: #1c2541;
   --bauhaus-card-progress-bar-bg: #e5e7eb;
@@ -42,32 +61,38 @@
   --bauhaus-chronicle-hover-fg: #fff;
 }
 
-/* ── Dark mode ────────────────────────────────────────────── */
+/* ── Dark mode ─────────────────────────────────────────────────── */
 .dark {
-  --background: 225 39% 5%;
-  --foreground: 213 31% 91%;
-  --card: 224 40% 8%;
-  --card-foreground: 213 31% 91%;
-  --muted: 223 35% 12%;
-  --muted-foreground: 215 20% 55%;
-  --border: 220 30% 16%;
-  --input: 220 30% 16%;
-  --primary: 213 31% 91%;
-  --primary-foreground: 225 39% 5%;
-  --secondary: 223 35% 12%;
-  --secondary-foreground: 213 31% 91%;
-  --accent: 220 30% 16%;
-  --accent-foreground: 213 31% 91%;
-  --destructive: 0 63% 31%;
-  --destructive-foreground: 213 31% 91%;
-  --ring: 220 30% 16%;
-  /* Floating shape tints */
-  --shape-blue: 213 94% 30%;
-  --shape-green: 142 76% 28%;
-  --shape-purple: 270 91% 35%;
-  /* Chart */
-  --chart-4: hsl(263 70% 70%);
-  /* Bauhaus Card */
+  /* Surfaces — sampled from STUD. screens 112–116 */
+  --background: 240 27% 8%; /* #0F0F1A  deepest bg    */
+  --foreground: 0 0% 100%; /* #FFFFFF               */
+  --card: 240 28% 14%; /* #1A1A2E  card surface  */
+  --card-foreground: 0 0% 100%; /* #FFFFFF               */
+  --muted: 240 35% 18%; /* #1E1E3F  elevated      */
+  --muted-foreground: 240 9% 66%; /* #A0A0B0  text-secondary*/
+  --border: 240 27% 24%; /* #2D2D4E               */
+  --input: 240 27% 24%; /* #2D2D4E               */
+
+  /* Primary accent — indigo unchanged in dark mode */
+  --primary: 239 84% 67%; /* #6366F1               */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF               */
+
+  /* Secondary — elevated surface */
+  --secondary: 240 35% 18%; /* #1E1E3F               */
+  --secondary-foreground: 0 0% 100%;
+
+  /* Accent */
+  --accent: 239 84% 67%; /* #6366F1               */
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive */
+  --destructive: 0 84% 60%; /* #EF4444               */
+  --destructive-foreground: 0 0% 100%;
+
+  /* Focus ring */
+  --ring: 239 84% 67%; /* indigo                */
+
+  /* Bauhaus card — dark */
   --bauhaus-card-bg: #0f1623;
   --bauhaus-card-separator: #1d2840;
   --bauhaus-card-inscription-top: #bfc7d5;
@@ -81,7 +106,9 @@
   --bauhaus-chronicle-hover-fg: #fff;
 }
 
-/* ── Base ─────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   Base reset
+   ───────────────────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -111,22 +138,18 @@ body {
   color: hsl(var(--foreground));
 }
 
+/* Dark mode body — clean deep dark, subtle radial warmth */
 .dark body {
   background:
     radial-gradient(
-      ellipse 80% 50% at 20% -10%,
-      hsl(220 80% 15% / 0.6) 0%,
+      ellipse 70% 40% at 15% -5%,
+      hsl(239 84% 67% / 0.06) 0%,
       transparent 60%
     ),
     radial-gradient(
-      ellipse 60% 40% at 80% 110%,
-      hsl(260 70% 12% / 0.5) 0%,
+      ellipse 50% 35% at 85% 105%,
+      hsl(239 84% 50% / 0.05) 0%,
       transparent 55%
-    ),
-    radial-gradient(
-      ellipse 40% 30% at 50% 50%,
-      hsl(210 60% 8% / 0.3) 0%,
-      transparent 70%
     ),
     hsl(var(--background));
 }
@@ -140,22 +163,36 @@ a {
   text-decoration: none;
 }
 
-/* ── Scrollbar ────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   Scrollbar — thin, subtle
+   ───────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(var(--card));
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
 
-/* ── Gradient Button ──────────────────────────────────────── */
+/* ── Utility: hide scrollbar (keep scroll behaviour) ────────────── */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / Opera */
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Gradient Button (kept from original — used by existing components)
+   ───────────────────────────────────────────────────────────────── */
 @property --pos-x {
   syntax: "<percentage>";
   initial-value: 11.14%;

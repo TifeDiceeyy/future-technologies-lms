@@ -56,10 +56,10 @@ export default function AttendanceOverview() {
       : 0;
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="mb-8">
+    <div className="p-4 md:p-8 max-w-6xl">
+      <div className="mb-6 md:mb-8">
         <h1
-          className="text-3xl font-bold"
+          className="text-2xl md:text-3xl font-bold"
           style={{ color: "var(--bauhaus-card-inscription-main)" }}
         >
           Attendance Overview
@@ -73,7 +73,7 @@ export default function AttendanceOverview() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {[
           {
             label: "Avg Attendance",
@@ -144,12 +144,12 @@ export default function AttendanceOverview() {
         </select>
 
         {/* Status filter */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar">
           {(["all", "good", "warning", "critical"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
                 statusFilter === f
                   ? "bg-primary text-white"
                   : "bg-card border border-border text-muted-foreground hover:text-foreground"
@@ -162,94 +162,104 @@ export default function AttendanceOverview() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden" style={CARD_STYLE}>
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                Student
-              </th>
-              <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                Course
-              </th>
-              <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                Sessions
-              </th>
-              <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                Attendance %
-              </th>
-              <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                Last Session
-              </th>
-              <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.map((a) => {
-              const pct =
-                a.total > 0 ? Math.round((a.present / a.total) * 100) : 100;
-              const s = statusConfig[a.status];
-              return (
-                <tr key={a.id} className="hover:bg-secondary transition-colors">
-                  <td className="px-5 py-4">
-                    <p className="text-foreground text-sm font-medium">
-                      {a.studentName}
-                    </p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-muted-foreground text-sm">
-                      {a.courseName}
-                    </p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-foreground text-sm">
-                      {a.present}
-                      <span className="text-muted-foreground">/{a.total}</span>
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-24 h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            pct >= 80
-                              ? "bg-gradient-to-r from-primary to-accent-foreground"
-                              : pct >= 60
-                                ? "bg-amber-400"
-                                : "bg-rose-400"
-                          }`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="text-foreground text-sm font-medium">
-                        {pct}%
+      <div className="overflow-x-auto">
+        <div
+          className="rounded-2xl overflow-hidden min-w-[640px]"
+          style={CARD_STYLE}
+        >
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Student
+                </th>
+                <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Course
+                </th>
+                <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Sessions
+                </th>
+                <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Attendance %
+                </th>
+                <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Last Session
+                </th>
+                <th className="text-left px-5 py-3.5 text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.map((a) => {
+                const pct =
+                  a.total > 0 ? Math.round((a.present / a.total) * 100) : 100;
+                const s = statusConfig[a.status];
+                return (
+                  <tr
+                    key={a.id}
+                    className="hover:bg-secondary transition-colors"
+                  >
+                    <td className="px-5 py-4">
+                      <p className="text-foreground text-sm font-medium">
+                        {a.studentName}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-muted-foreground text-sm">
+                        {a.courseName}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="text-foreground text-sm">
+                        {a.present}
+                        <span className="text-muted-foreground">
+                          /{a.total}
+                        </span>
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-muted-foreground text-sm">
-                      {a.lastSession}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`text-xs font-medium px-2.5 py-1 rounded-full border ${s.color}`}
-                    >
-                      {s.label}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div className="py-12 text-center text-muted-foreground text-sm">
-            No attendance records match your filters.
-          </div>
-        )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-24 h-1.5 bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              pct >= 80
+                                ? "bg-gradient-to-r from-primary to-accent-foreground"
+                                : pct >= 60
+                                  ? "bg-amber-400"
+                                  : "bg-rose-400"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-foreground text-sm font-medium">
+                          {pct}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="text-muted-foreground text-sm">
+                        {a.lastSession}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`text-xs font-medium px-2.5 py-1 rounded-full border ${s.color}`}
+                      >
+                        {s.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="py-12 text-center text-muted-foreground text-sm">
+              No attendance records match your filters.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

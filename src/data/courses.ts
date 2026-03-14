@@ -11,6 +11,7 @@ export interface Course {
   studentsEnrolled: number;
   published: boolean;
   createdAt: string;
+  isPaid: boolean;
   // Student-specific fields
   enrolled: boolean;
   progress: number;
@@ -41,10 +42,12 @@ export const initialCourses: Course[] = [
     duration: "24h",
     rating: 4.9,
     modules: 12,
-    description: "Master AWS core services: S3, EC2, VPC, IAM, and CloudFront from the ground up.",
+    description:
+      "Master AWS core services: S3, EC2, VPC, IAM, and CloudFront from the ground up.",
     studentsEnrolled: 142,
     published: true,
     createdAt: "Jan 10, 2026",
+    isPaid: false,
     enrolled: true,
     progress: 68,
     modulesCompleted: 8,
@@ -59,10 +62,12 @@ export const initialCourses: Course[] = [
     duration: "18h",
     rating: 4.8,
     modules: 10,
-    description: "Build production-grade React applications with TypeScript, hooks, and modern patterns.",
+    description:
+      "Build production-grade React applications with TypeScript, hooks, and modern patterns.",
     studentsEnrolled: 98,
     published: true,
     createdAt: "Jan 15, 2026",
+    isPaid: false,
     enrolled: true,
     progress: 42,
     modulesCompleted: 4,
@@ -77,10 +82,12 @@ export const initialCourses: Course[] = [
     duration: "30h",
     rating: 4.7,
     modules: 14,
-    description: "Learn Python, NumPy, Pandas, and data visualisation for real-world data science tasks.",
+    description:
+      "Learn Python, NumPy, Pandas, and data visualisation for real-world data science tasks.",
     studentsEnrolled: 76,
     published: true,
     createdAt: "Jan 20, 2026",
+    isPaid: false,
     enrolled: true,
     progress: 15,
     modulesCompleted: 2,
@@ -95,10 +102,12 @@ export const initialCourses: Course[] = [
     duration: "16h",
     rating: 4.9,
     modules: 8,
-    description: "Automate AWS infrastructure with Terraform: modules, state, workspaces, and CI/CD.",
+    description:
+      "Automate AWS infrastructure with Terraform: modules, state, workspaces, and CI/CD.",
     studentsEnrolled: 54,
     published: true,
     createdAt: "Feb 1, 2026",
+    isPaid: false,
     enrolled: true,
     progress: 5,
     modulesCompleted: 0,
@@ -113,10 +122,12 @@ export const initialCourses: Course[] = [
     duration: "20h",
     rating: 4.8,
     modules: 11,
-    description: "Containerise applications with Docker and orchestrate at scale with Kubernetes.",
+    description:
+      "Containerise applications with Docker and orchestrate at scale with Kubernetes.",
     studentsEnrolled: 63,
     published: true,
     createdAt: "Feb 5, 2026",
+    isPaid: false,
     enrolled: false,
     progress: 0,
     modulesCompleted: 0,
@@ -131,10 +142,12 @@ export const initialCourses: Course[] = [
     duration: "35h",
     rating: 4.9,
     modules: 16,
-    description: "From regression to neural networks — a practical ML introduction with Python.",
+    description:
+      "From regression to neural networks — a practical ML introduction with Python.",
     studentsEnrolled: 87,
     published: true,
     createdAt: "Feb 10, 2026",
+    isPaid: false,
     enrolled: false,
     progress: 0,
     modulesCompleted: 0,

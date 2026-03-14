@@ -1,23 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Home,
-  BookOpen,
-  FileText,
-  BarChart2,
-  Bell,
-  Settings,
-} from "lucide-react";
+import { Home, Search, BookOpen, BookMarked, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { id: "home", icon: Home, label: "Home", route: "/home" },
+  { id: "search", icon: Search, label: "Search", route: "/search" },
   { id: "courses", icon: BookOpen, label: "Courses", route: "/courses" },
-  { id: "homework", icon: FileText, label: "Homework", route: "/homework" },
-  { id: "dashboard", icon: BarChart2, label: "Dashboard", route: "/dashboard" },
-  { id: "notifications", icon: Bell, label: "Alerts", route: "/notifications" },
-  { id: "settings", icon: Settings, label: "Settings", route: "/settings" },
+  { id: "library", icon: BookMarked, label: "Library", route: "/library" },
+  { id: "account", icon: User, label: "Account", route: "/profile" },
 ];
 
 export function MinimalDock() {
