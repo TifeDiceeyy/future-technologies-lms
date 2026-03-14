@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, BookOpen, Lock, X, Zap } from "lucide-react";
+import { Search, BookOpen, Lock, X, Zap, Loader2 } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
-import { useApp } from "../store/AppContext";
+import { getCourses } from "../api/courses";
+import type { Course } from "../data/courses";
 
 const CARD_STYLE = {
   backgroundColor: "var(--bauhaus-card-bg)",
@@ -22,11 +23,21 @@ const accent = (idx: number) => ACCENT_POOL[idx % ACCENT_POOL.length];
 export default function PublicCourses() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { courses } = useApp();
   const isAuthenticated = !!currentUser;
 
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  useEffect(() => {
+    getCourses()
+      .then((data) => {
+        setCourses(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const filtered = courses.filter(
     (c) =>
@@ -116,7 +127,14 @@ export default function PublicCourses() {
           />
         </div>
 
-        {filtered.length === 0 && (
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <Loader2 size={32} className="animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading courses…</p>
+          </div>
+        )}
+
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-20">
             <BookOpen
               size={40}
@@ -131,7 +149,7 @@ export default function PublicCourses() {
         )}
 
         {/* Course grid */}
-        {filtered.length > 0 && (
+        {!loading && filtered.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((course, idx) => (
               <div
@@ -254,7 +272,7 @@ export default function PublicCourses() {
         )}
 
         {/* Bottom CTA for unauthenticated */}
-        {!isAuthenticated && filtered.length > 0 && (
+        {!loading && !isAuthenticated && filtered.length > 0 && (
           <div
             className="mt-12 rounded-2xl px-8 py-8 text-center"
             style={{

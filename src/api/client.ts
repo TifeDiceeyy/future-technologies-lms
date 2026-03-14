@@ -19,10 +19,17 @@ export async function apiFetch<T>(
   options: RequestInit = {},
   requireAuth = false,
 ): Promise<T> {
+  const method = (options.method ?? "GET").toUpperCase();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  // Only set Content-Type for requests with a body — GET/HEAD requests with
+  // Content-Type trigger a CORS preflight that can fail if the API Gateway
+  // doesn't explicitly allow that header.
+  if (method !== "GET" && method !== "HEAD") {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (requireAuth) {
     const token = await getAuthToken();
