@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, BookOpen } from "lucide-react";
+import { Search, BookOpen, Lock, X, Zap } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { useApp } from "../store/AppContext";
 
@@ -26,6 +26,7 @@ export default function PublicCourses() {
   const isAuthenticated = !!currentUser;
 
   const [query, setQuery] = useState("");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const filtered = courses.filter(
     (c) =>
@@ -166,12 +167,33 @@ export default function PublicCourses() {
                         {course.level}
                       </span>
                     )}
-                    {course.category && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        {course.category}
-                      </span>
-                    )}
+                    {/* Free / Paid badge */}
+                    <span
+                      className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0"
+                      style={
+                        course.isPaid
+                          ? {
+                              backgroundColor: "#F59E0B18",
+                              color: "#F59E0B",
+                              border: "1px solid #F59E0B33",
+                            }
+                          : {
+                              backgroundColor: "#10B98118",
+                              color: "#10B981",
+                              border: "1px solid #10B98133",
+                            }
+                      }
+                    >
+                      {course.isPaid && <Lock size={10} />}
+                      {course.isPaid ? "Paid" : "Free"}
+                    </span>
                   </div>
+
+                  {course.category && (
+                    <span className="text-xs text-muted-foreground block mb-2">
+                      {course.category}
+                    </span>
+                  )}
 
                   <h3
                     className="font-semibold text-sm leading-snug mb-1"
@@ -199,15 +221,31 @@ export default function PublicCourses() {
                   </div>
 
                   <button
-                    onClick={() =>
-                      navigate(
-                        isAuthenticated ? `/courses/${course.id}` : "/register",
-                      )
-                    }
-                    className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-                    style={{ backgroundColor: accent(idx) }}
+                    onClick={() => {
+                      if (course.isPaid) {
+                        setUpgradeOpen(true);
+                      } else {
+                        navigate(
+                          isAuthenticated
+                            ? `/courses/${course.id}`
+                            : "/register",
+                        );
+                      }
+                    }}
+                    className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 flex items-center justify-center gap-1.5"
+                    style={{
+                      backgroundColor: course.isPaid ? "#F59E0B" : accent(idx),
+                    }}
                   >
-                    {isAuthenticated ? "View Course" : "Enroll Free"}
+                    {course.isPaid ? (
+                      <>
+                        <Lock size={13} /> Upgrade to Access
+                      </>
+                    ) : isAuthenticated ? (
+                      "View Course"
+                    ) : (
+                      "Enroll Free"
+                    )}
                   </button>
                 </div>
               </div>
@@ -240,6 +278,80 @@ export default function PublicCourses() {
           </div>
         )}
       </div>
+
+      {/* Upgrade modal */}
+      {upgradeOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.65)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setUpgradeOpen(false);
+          }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 shadow-2xl"
+            style={{
+              backgroundColor: "var(--bauhaus-card-bg)",
+              border: "1px solid var(--bauhaus-card-separator)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: "#F59E0B20" }}
+                >
+                  <Zap size={18} style={{ color: "#F59E0B" }} />
+                </div>
+                <h2
+                  className="font-semibold"
+                  style={{ color: "var(--bauhaus-card-inscription-main)" }}
+                >
+                  Premium Course
+                </h2>
+              </div>
+              <button
+                onClick={() => setUpgradeOpen(false)}
+                className="p-1 hover:opacity-70"
+              >
+                <X
+                  size={16}
+                  style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+                />
+              </button>
+            </div>
+            <p
+              className="text-sm mb-5"
+              style={{ color: "var(--bauhaus-card-inscription-sub)" }}
+            >
+              This course requires a Pro plan. Upgrade to unlock all premium
+              courses and features.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUpgradeOpen(false)}
+                className="flex-1 py-2 rounded-xl text-sm font-medium hover:opacity-70"
+                style={{
+                  backgroundColor: "var(--bauhaus-card-separator)",
+                  color: "var(--bauhaus-card-inscription-sub)",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setUpgradeOpen(false);
+                  navigate(isAuthenticated ? "/upgrade" : "/register");
+                }}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ backgroundColor: "#F59E0B" }}
+              >
+                {isAuthenticated ? "Upgrade Plan →" : "Register Free →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
