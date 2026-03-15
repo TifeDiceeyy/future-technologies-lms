@@ -8,6 +8,8 @@ import {
   ToggleRight,
   AlertTriangle,
   X,
+  Save,
+  Check,
 } from "lucide-react";
 import { useApp } from "../../store/AppContext";
 import type { Course } from "../../data/courses";
@@ -41,6 +43,12 @@ export default function AdminCourses() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // pending[courseId] = partial updates not yet saved to API
+  const [pending, setPending] = useState<Record<number, Partial<Course>>>({});
+  // saving[courseId] = true while PUT is in flight
+  const [saving, setSaving] = useState<Record<number, boolean>>({});
+  // saved[courseId] = true briefly after successful save (for checkmark flash)
+  const [saved, setSaved] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (confirmDeleteId === null) return;
@@ -92,6 +100,39 @@ export default function AdminCourses() {
       setSubmitError("Failed to save course. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  function stage(id: number, updates: Partial<Course>) {
+    updateCourse(id, updates); // update local state immediately
+    setPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), ...updates } }));
+  }
+
+  async function saveRow(id: number) {
+    const changes = pending[id];
+    if (!changes || Object.keys(changes).length === 0) return;
+    setSaving((s) => ({ ...s, [id]: true }));
+    try {
+      await updateCourse(id, changes);
+      setPending((p) => {
+        const next = { ...p };
+        delete next[id];
+        return next;
+      });
+      setSaved((s) => ({ ...s, [id]: true }));
+      setTimeout(
+        () =>
+          setSaved((s) => {
+            const next = { ...s };
+            delete next[id];
+            return next;
+          }),
+        1500,
+      );
+    } catch {
+      // updateCourse already logs; leave pending so user can retry
+    } finally {
+      setSaving((s) => ({ ...s, [id]: false }));
     }
   }
 
@@ -377,7 +418,7 @@ export default function AdminCourses() {
                   </td>
                   <td className="px-5 py-4">
                     <button
-                      onClick={() => updateCourse(c.id, { isPaid: !c.isPaid })}
+                      onClick={() => stage(c.id, { isPaid: !c.isPaid })}
                       className="text-xs font-medium px-2.5 py-1 rounded-full border transition-all hover:opacity-70"
                       style={
                         c.isPaid
@@ -392,16 +433,14 @@ export default function AdminCourses() {
                               borderColor: "#10B98133",
                             }
                       }
-                      title="Click to toggle pricing"
+                      title="Click to toggle — then Save"
                     >
                       {c.isPaid ? "Paid" : "Free"}
                     </button>
                   </td>
                   <td className="px-5 py-4">
                     <button
-                      onClick={() =>
-                        updateCourse(c.id, { published: !c.published })
-                      }
+                      onClick={() => stage(c.id, { published: !c.published })}
                       className="flex items-center gap-1.5 text-xs"
                     >
                       {c.published ? (
@@ -427,12 +466,41 @@ export default function AdminCourses() {
                     </button>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button
-                      onClick={() => setConfirmDeleteId(c.id)}
-                      className="text-muted-foreground hover:text-rose-400 transition-colors"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {/* Save button — visible when there are staged changes */}
+                      {pending[c.id] &&
+                        Object.keys(pending[c.id]).length > 0 && (
+                          <button
+                            onClick={() => saveRow(c.id)}
+                            disabled={saving[c.id]}
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg transition-all disabled:opacity-50"
+                            style={{
+                              backgroundColor: "#156ef622",
+                              color: "#156ef6",
+                              border: "1px solid #156ef644",
+                            }}
+                          >
+                            {saving[c.id] ? (
+                              <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                            ) : saved[c.id] ? (
+                              <Check size={12} />
+                            ) : (
+                              <Save size={12} />
+                            )}
+                            {saving[c.id]
+                              ? "Saving…"
+                              : saved[c.id]
+                                ? "Saved"
+                                : "Save"}
+                          </button>
+                        )}
+                      <button
+                        onClick={() => setConfirmDeleteId(c.id)}
+                        className="text-muted-foreground hover:text-rose-400 transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -79,16 +79,15 @@ export async function getCourse(id: string | number): Promise<Course> {
 
 export async function createCourse(
   course: Omit<Course, "id">,
-  tempId: number,
+  _tempId: number,
+  uuid: string,
 ): Promise<Course> {
-  // Send the tempId as courseId so the Lambda stores a numeric key.
-  // This means DELETE /courses/{tempId} and PUT /courses/{tempId} will work
-  // without needing a separate UUID → numeric mapping.
+  // Send the UUID as courseId — string type matches DynamoDB partition key (S)
   const item = await apiFetch<ApiCourse>(
     "/courses",
     {
       method: "POST",
-      body: JSON.stringify({ ...course, courseId: tempId }),
+      body: JSON.stringify({ ...course, courseId: uuid }),
     },
     true,
   );

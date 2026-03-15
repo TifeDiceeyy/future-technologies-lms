@@ -163,21 +163,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ── Courses ──────────────────────────────────────────────────────────────
 
   const addCourse = async (c: Omit<Course, "id">) => {
+    // UUID for courseId → unlimited unique courses, no ID collision
+    const uuid = crypto.randomUUID();
     const tempId = nextId(courses);
-    // courseId MUST be a string — DynamoDB partition key is type S
-    const tempCourseId = String(tempId);
-    setCourses((prev) => [
-      ...prev,
-      { ...c, id: tempId, courseId: tempCourseId },
-    ]);
+    setCourses((prev) => [...prev, { ...c, id: tempId, courseId: uuid }]);
     try {
-      const created = await apiCreateCourse(c, tempId);
+      const created = await apiCreateCourse(c, tempId, uuid);
       setCourses((prev) => prev.map((x) => (x.id === tempId ? created : x)));
     } catch (err) {
       console.error("[addCourse] API error — rolling back:", err);
-      // Roll back optimistic add so the UI doesn't show a phantom course
       setCourses((prev) => prev.filter((x) => x.id !== tempId));
-      throw err; // re-throw so the caller can show an error message
+      throw err;
     }
   };
 
