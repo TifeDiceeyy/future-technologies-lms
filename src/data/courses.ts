@@ -1,5 +1,6 @@
 export interface Course {
   id: number;
+  courseId?: string; // real DynamoDB primary key (UUID or numeric string)
   title: string;
   instructor: string;
   category: string;

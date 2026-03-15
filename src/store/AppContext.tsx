@@ -165,13 +165,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addCourse = async (c: Omit<Course, "id">) => {
     // Optimistic local add
     const tempId = nextId(courses);
-    setCourses((prev) => [...prev, { ...c, id: tempId }]);
+    setCourses((prev) => [
+      ...prev,
+      { ...c, id: tempId, courseId: String(tempId) },
+    ]);
     try {
-      const created = await apiCreateCourse(c);
-      // Replace temp entry with server response
+      const created = await apiCreateCourse(c, tempId);
+      // Replace temp entry with server response (preserves courseId from DynamoDB)
       setCourses((prev) => prev.map((x) => (x.id === tempId ? created : x)));
-    } catch {
-      // Keep optimistic add — API not deployed yet
+    } catch (err) {
+      console.error("[addCourse] API error — kept local copy:", err);
     }
   };
 
@@ -180,18 +183,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       prev.map((c) => (c.id === id ? { ...c, ...updates } : c)),
     );
     try {
-      await apiUpdateCourse(id, updates);
-    } catch {
-      // Silent — keep local update
+      // Use the real DynamoDB key (courseId) if available, otherwise fall back to id
+      const course = courses.find((c) => c.id === id);
+      const key = course?.courseId ?? String(id);
+      await apiUpdateCourse(key, updates);
+    } catch (err) {
+      console.error("[updateCourse] API error:", err);
     }
   };
 
   const deleteCourse = async (id: number) => {
     setCourses((prev) => prev.filter((c) => c.id !== id));
     try {
-      await apiDeleteCourse(id);
-    } catch {
-      // Silent — keep local delete
+      // Use the real DynamoDB key (courseId) if available, otherwise fall back to id
+      const course = courses.find((c) => c.id === id);
+      const key = course?.courseId ?? String(id);
+      await apiDeleteCourse(key);
+    } catch (err) {
+      console.error("[deleteCourse] API error:", err);
     }
   };
 

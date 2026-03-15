@@ -7,7 +7,6 @@ import {
   UpdateCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { randomUUID } from "crypto";
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: "us-east-1" }));
 const TABLE = "mindcampus-courses";
@@ -47,7 +46,10 @@ export const handler = async (event) => {
     // POST /courses
     if (method === "POST") {
       const body = JSON.parse(event.body ?? "{}");
-      const item = { ...body, courseId: randomUUID() };
+      // Use client-provided courseId (numeric) if present, otherwise fall back
+      // to a timestamp-based numeric id. Avoids UUID → parseInt(NaN) = 0 bug.
+      const courseId = body.courseId ?? Date.now();
+      const item = { ...body, courseId };
       await client.send(new PutCommand({ TableName: TABLE, Item: item }));
       return res(201, item);
     }

@@ -23,14 +23,26 @@ interface ApiCourse {
   currentScore?: number | null;
 }
 
+// Derive a stable numeric React id from the DynamoDB courseId.
+// If courseId is already numeric (e.g. a timestamp), use it directly.
+// If it's a UUID, convert the first 7 hex chars to an integer — unique
+// enough for React keys and internal state.
+function deriveNumericId(courseId: string | number): number {
+  if (typeof courseId === "number") return courseId;
+  const n = parseInt(String(courseId), 10);
+  if (!isNaN(n) && n > 0) return n;
+  // UUID: strip dashes, take first 7 hex chars → max ~268 million, low collision risk
+  const hex = String(courseId).replace(/-/g, "").slice(0, 7);
+  return parseInt(hex, 16) || 1;
+}
+
 // Adapter: DynamoDB item → existing Course UI type
 function toCourse(item: ApiCourse): Course {
-  const id =
-    typeof item.courseId === "number"
-      ? item.courseId
-      : parseInt(String(item.courseId), 10) || 0;
+  const rawId = item.courseId ?? 0;
+  const id = deriveNumericId(rawId);
   return {
     id,
+    courseId: String(rawId), // preserve real DynamoDB key for CRUD operations
     title: item.title ?? "",
     instructor: item.instructor ?? "",
     category: item.category ?? "General",
@@ -67,28 +79,34 @@ export async function getCourse(id: string | number): Promise<Course> {
 
 export async function createCourse(
   course: Omit<Course, "id">,
+  tempId: number,
 ): Promise<Course> {
+  // Send the tempId as courseId so the Lambda stores a numeric key.
+  // This means DELETE /courses/{tempId} and PUT /courses/{tempId} will work
+  // without needing a separate UUID → numeric mapping.
   const item = await apiFetch<ApiCourse>(
     "/courses",
     {
       method: "POST",
-      body: JSON.stringify(course),
+      body: JSON.stringify({ ...course, courseId: tempId }),
     },
     true,
   );
   return toCourse(item);
 }
 
-export async function deleteCourse(id: string | number): Promise<void> {
-  await apiFetch<void>(`/courses/${id}`, { method: "DELETE" }, true);
+// courseId here is the real DynamoDB key (UUID string or numeric string),
+// NOT the derived React numeric id.
+export async function deleteCourse(courseId: string): Promise<void> {
+  await apiFetch<void>(`/courses/${courseId}`, { method: "DELETE" }, true);
 }
 
 export async function updateCourse(
-  id: string | number,
+  courseId: string,
   updates: Partial<Course>,
 ): Promise<Course> {
   const item = await apiFetch<ApiCourse>(
-    `/courses/${id}`,
+    `/courses/${courseId}`,
     {
       method: "PUT",
       body: JSON.stringify(updates),
