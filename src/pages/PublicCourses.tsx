@@ -2,8 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, BookOpen, Lock, X, Zap, Loader2 } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
-import { getCourses } from "../api/courses";
-import type { Course } from "../data/courses";
+
+interface PublicCourse {
+  courseId?: string | number;
+  id?: number;
+  title: string;
+  description?: string;
+  instructor?: string;
+  modules?: number;
+  duration?: string;
+  level?: string;
+  category?: string;
+  isPaid?: boolean;
+}
 
 const CARD_STYLE = {
   backgroundColor: "var(--bauhaus-card-bg)",
@@ -25,18 +36,22 @@ export default function PublicCourses() {
   const { currentUser } = useAuth();
   const isAuthenticated = !!currentUser;
 
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<PublicCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   useEffect(() => {
-    getCourses()
-      .then((data) => {
-        setCourses(data);
+    fetch("https://lx2i5gpnc9.execute-api.us-east-1.amazonaws.com/prod/courses")
+      .then((r) => r.json())
+      .then((data: PublicCourse[]) => {
+        setCourses(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("[PublicCourses] fetch failed:", err);
+        setLoading(false);
+      });
   }, []);
 
   const filtered = courses.filter(
