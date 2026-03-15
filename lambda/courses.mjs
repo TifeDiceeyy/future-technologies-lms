@@ -46,9 +46,9 @@ export const handler = async (event) => {
     // POST /courses
     if (method === "POST") {
       const body = JSON.parse(event.body ?? "{}");
-      // Use client-provided courseId (numeric) if present, otherwise fall back
-      // to a timestamp-based numeric id. Avoids UUID → parseInt(NaN) = 0 bug.
-      const courseId = body.courseId ?? Date.now();
+      // courseId must be a STRING — the DynamoDB table partition key is type S.
+      // Accept client-provided id but always stringify it to avoid type mismatch.
+      const courseId = String(body.courseId ?? Date.now());
       const item = { ...body, courseId };
       await client.send(new PutCommand({ TableName: TABLE, Item: item }));
       return res(201, item);

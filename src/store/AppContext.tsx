@@ -163,18 +163,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ── Courses ──────────────────────────────────────────────────────────────
 
   const addCourse = async (c: Omit<Course, "id">) => {
-    // Optimistic local add
     const tempId = nextId(courses);
+    // courseId MUST be a string — DynamoDB partition key is type S
+    const tempCourseId = String(tempId);
     setCourses((prev) => [
       ...prev,
-      { ...c, id: tempId, courseId: String(tempId) },
+      { ...c, id: tempId, courseId: tempCourseId },
     ]);
     try {
       const created = await apiCreateCourse(c, tempId);
-      // Replace temp entry with server response (preserves courseId from DynamoDB)
       setCourses((prev) => prev.map((x) => (x.id === tempId ? created : x)));
     } catch (err) {
-      console.error("[addCourse] API error — kept local copy:", err);
+      console.error("[addCourse] API error — rolling back:", err);
+      // Roll back optimistic add so the UI doesn't show a phantom course
+      setCourses((prev) => prev.filter((x) => x.id !== tempId));
+      throw err; // re-throw so the caller can show an error message
     }
   };
 

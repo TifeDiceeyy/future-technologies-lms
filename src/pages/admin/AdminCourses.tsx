@@ -39,6 +39,8 @@ export default function AdminCourses() {
   const [form, setForm] = useState(emptyForm);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (confirmDeleteId === null) return;
@@ -64,25 +66,33 @@ export default function AdminCourses() {
       c.instructor.toLowerCase().includes(search.toLowerCase()),
   );
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    addCourse({
-      ...form,
-      rating: 0,
-      studentsEnrolled: 0,
-      published: false,
-      createdAt: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      enrolled: false,
-      progress: 0,
-      modulesCompleted: 0,
-      currentScore: null,
-    });
-    setForm(emptyForm);
-    setShowForm(false);
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      await addCourse({
+        ...form,
+        rating: 0,
+        studentsEnrolled: 0,
+        published: false,
+        createdAt: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        enrolled: false,
+        progress: 0,
+        modulesCompleted: 0,
+        currentScore: null,
+      });
+      setForm(emptyForm);
+      setShowForm(false);
+    } catch {
+      setSubmitError("Failed to save course. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -237,6 +247,19 @@ export default function AdminCourses() {
             </select>
           </div>
 
+          {submitError && (
+            <div
+              className="col-span-2 px-4 py-3 rounded-xl text-sm"
+              style={{
+                backgroundColor: "#EF444415",
+                border: "1px solid #EF444433",
+                color: "#EF4444",
+              }}
+            >
+              {submitError}
+            </div>
+          )}
+
           <div className="col-span-2 flex justify-end gap-3 pt-2">
             <ChronicleButton
               inscription="Cancel"
@@ -248,10 +271,11 @@ export default function AdminCourses() {
               onClick={() => {
                 setShowForm(false);
                 setForm(emptyForm);
+                setSubmitError("");
               }}
             />
             <ChronicleButton
-              inscription="Create Course"
+              inscription={isSubmitting ? "Saving…" : "Create Course"}
               variant="filled"
               backgroundColor="#156ef6"
               textColor="#fff"
