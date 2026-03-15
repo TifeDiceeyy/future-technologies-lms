@@ -103,36 +103,36 @@ export default function AdminCourses() {
     }
   }
 
+  // Stage toggle changes locally only — no API call until Save is clicked
   function stage(id: number, updates: Partial<Course>) {
-    updateCourse(id, updates); // update local state immediately
+    updateCourse(id, updates); // optimistic local state update only
     setPending((p) => ({ ...p, [id]: { ...(p[id] ?? {}), ...updates } }));
   }
 
-  async function saveRow(id: number) {
-    const changes = pending[id];
-    if (!changes || Object.keys(changes).length === 0) return;
-    setSaving((s) => ({ ...s, [id]: true }));
+  // Save current row state to API explicitly
+  async function saveRow(c: Course) {
+    setSaving((s) => ({ ...s, [c.id]: true }));
     try {
-      await updateCourse(id, changes);
+      await updateCourse(c.id, { published: c.published, isPaid: c.isPaid });
       setPending((p) => {
-        const next = { ...p };
-        delete next[id];
-        return next;
+        const n = { ...p };
+        delete n[c.id];
+        return n;
       });
-      setSaved((s) => ({ ...s, [id]: true }));
+      setSaved((s) => ({ ...s, [c.id]: true }));
       setTimeout(
         () =>
           setSaved((s) => {
-            const next = { ...s };
-            delete next[id];
-            return next;
+            const n = { ...s };
+            delete n[c.id];
+            return n;
           }),
         1500,
       );
     } catch {
-      // updateCourse already logs; leave pending so user can retry
+      // keep pending so user can retry
     } finally {
-      setSaving((s) => ({ ...s, [id]: false }));
+      setSaving((s) => ({ ...s, [c.id]: false }));
     }
   }
 
@@ -467,33 +467,38 @@ export default function AdminCourses() {
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {/* Save button — visible when there are staged changes */}
-                      {pending[c.id] &&
-                        Object.keys(pending[c.id]).length > 0 && (
-                          <button
-                            onClick={() => saveRow(c.id)}
-                            disabled={saving[c.id]}
-                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg transition-all disabled:opacity-50"
-                            style={{
-                              backgroundColor: "#156ef622",
-                              color: "#156ef6",
-                              border: "1px solid #156ef644",
-                            }}
-                          >
-                            {saving[c.id] ? (
-                              <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                            ) : saved[c.id] ? (
-                              <Check size={12} />
-                            ) : (
-                              <Save size={12} />
-                            )}
-                            {saving[c.id]
-                              ? "Saving…"
-                              : saved[c.id]
-                                ? "Saved"
-                                : "Save"}
-                          </button>
+                      {/* Save button — always visible */}
+                      <button
+                        onClick={() => saveRow(c)}
+                        disabled={saving[c.id]}
+                        className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg transition-all disabled:opacity-50"
+                        style={
+                          saved[c.id]
+                            ? {
+                                backgroundColor: "#10B98118",
+                                color: "#10B981",
+                                border: "1px solid #10B98133",
+                              }
+                            : {
+                                backgroundColor: "#156ef622",
+                                color: "#156ef6",
+                                border: "1px solid #156ef644",
+                              }
+                        }
+                      >
+                        {saving[c.id] ? (
+                          <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                        ) : saved[c.id] ? (
+                          <Check size={12} />
+                        ) : (
+                          <Save size={12} />
                         )}
+                        {saving[c.id]
+                          ? "Saving…"
+                          : saved[c.id]
+                            ? "Saved"
+                            : "Save"}
+                      </button>
                       <button
                         onClick={() => setConfirmDeleteId(c.id)}
                         className="text-muted-foreground hover:text-rose-400 transition-colors"
